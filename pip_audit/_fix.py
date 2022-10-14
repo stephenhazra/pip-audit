@@ -111,7 +111,7 @@ def _resolve_fix_version(
 
         # We want to retrieve a version that potentially fixes all vulnerabilities
         current_version = max([get_earliest_fix_version(dep, v) for v in current_vulns])
-        _, current_vulns = service.query(ResolvedDependency(dep.name, current_version))
+        _, _, current_vulns = service.query(ResolvedDependency(dep.name, current_version))
     return current_version
 
 

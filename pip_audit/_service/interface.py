@@ -123,24 +123,24 @@ class VulnerabilityResult:
         return bool(ids & (self.aliases | {self.id}))
 
 
+Yanked = bool
+AuditResult = Tuple[Dependency, Yanked, List[VulnerabilityResult]]
+
+
 class VulnerabilityService(ABC):
     """
     Represents an abstract provider of Python package vulnerability information.
     """
 
     @abstractmethod
-    def query(
-        self, spec: Dependency
-    ) -> Tuple[Dependency, List[VulnerabilityResult]]:  # pragma: no cover
+    def query(self, spec: Dependency) -> AuditResult:  # pragma: no cover
         """
         Query the `VulnerabilityService` for information about the given `Dependency`,
-        returning a list of `VulnerabilityResult`.
+        returning an `AuditResult`.
         """
         raise NotImplementedError
 
-    def query_all(
-        self, specs: Iterator[Dependency]
-    ) -> Iterator[Tuple[Dependency, List[VulnerabilityResult]]]:
+    def query_all(self, specs: Iterator[Dependency]) -> Iterator[AuditResult]:
         """
         Query the vulnerability service for information on multiple dependencies.
 

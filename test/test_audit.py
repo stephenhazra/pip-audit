@@ -18,6 +18,7 @@ def test_audit(vuln_service, dep_source):
 
     assert next(results) == (
         next(source.collect()),
+        False,
         [
             VulnerabilityResult(
                 id="fake-id",

@@ -5,13 +5,14 @@ API as a `VulnerabilityService`.
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, cast
 
 import requests
 from packaging.version import InvalidVersion, Version
 
 from pip_audit._cache import caching_session
 from pip_audit._service.interface import (
+    AuditResult,
     ConnectionError,
     Dependency,
     ResolvedDependency,
@@ -44,14 +45,14 @@ class PyPIService(VulnerabilityService):
         self.session = caching_session(cache_dir)
         self.timeout = timeout
 
-    def query(self, spec: Dependency) -> Tuple[Dependency, List[VulnerabilityResult]]:
+    def query(self, spec: Dependency) -> AuditResult:
         """
         Queries PyPI for the given `Dependency` specification.
 
         See `VulnerabilityService.query`.
         """
         if spec.is_skipped():
-            return spec, []
+            return spec, False, []
         spec = cast(ResolvedDependency, spec)
 
         url = f"https://pypi.org/pypi/{spec.canonical_name}/{str(spec.version)}/json"
@@ -78,7 +79,7 @@ class PyPIService(VulnerabilityService):
                     f"{spec.canonical_name} ({spec.version})"
                 )
                 logger.debug(skip_reason)
-                return SkippedDependency(name=spec.name, skip_reason=skip_reason), []
+                return SkippedDependency(name=spec.name, skip_reason=skip_reason), False, []
             raise ServiceError from http_error
 
         response_json = response.json()
@@ -101,11 +102,12 @@ class PyPIService(VulnerabilityService):
                             f"{hash_value} of type {hash_type} could not be found in PyPI releases"
                         )
 
+        yanked = response_json["info"].get("yanked", False)
         vulns = response_json.get("vulnerabilities")
 
         # No `vulnerabilities` key means that there are no vulnerabilities for any version
         if vulns is None:
-            return spec, results
+            return spec, yanked, results
 
         for v in vulns:
             # Put together the fix versions list
@@ -134,4 +136,4 @@ class PyPIService(VulnerabilityService):
                 VulnerabilityResult(v["id"], description, fix_versions, set(v["aliases"]))
             )
 
-        return spec, results
+        return spec, yanked, results

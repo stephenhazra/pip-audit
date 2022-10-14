@@ -140,6 +140,7 @@ def test_pypi_mocked_response(monkeypatch, cache_dir):
 
             def json(self):
                 return {
+                    "info": {"yanked": False},
                     "vulnerabilities": [
                         {
                             "aliases": ["foo", "bar"],
@@ -147,7 +148,7 @@ def test_pypi_mocked_response(monkeypatch, cache_dir):
                             "summary": "The first vulnerability",
                             "fixed_in": ["1.1", "1.4"],
                         }
-                    ]
+                    ],
                 }
 
         return MockResponse()
@@ -190,6 +191,7 @@ def test_pypi_vuln_description_fallbacks(monkeypatch, cache_dir, summary, detail
 
             def json(self):
                 return {
+                    "info": {"yanked": False},
                     "vulnerabilities": [
                         {
                             "aliases": ["foo", "bar"],
@@ -198,7 +200,7 @@ def test_pypi_vuln_description_fallbacks(monkeypatch, cache_dir, summary, detail
                             "details": details,
                             "fixed_in": ["1.1", "1.4"],
                         }
-                    ]
+                    ],
                 }
 
         return MockResponse()
@@ -230,7 +232,9 @@ def test_pypi_no_vuln_key(monkeypatch, cache_dir):
                 pass
 
             def json(self):
-                return {}
+                return {
+                    "info": {"yanked": False},
+                }
 
         return MockResponse()
 
@@ -256,6 +260,7 @@ def test_pypi_invalid_version(monkeypatch, cache_dir):
 
             def json(self):
                 return {
+                    "info": {"yanked": False},
                     "vulnerabilities": [
                         {
                             "aliases": ["foo", "bar"],
@@ -263,7 +268,7 @@ def test_pypi_invalid_version(monkeypatch, cache_dir):
                             "summary": "The first vulnerability",
                             "fixed_in": ["invalid_version"],
                         }
-                    ]
+                    ],
                 }
 
         return MockResponse()
@@ -325,6 +330,7 @@ def test_pypi_hashed_dep_no_release_data(cache_dir, monkeypatch):
 
             def json(self):
                 return {
+                    "info": {"yanked": False},
                     "urls": [],
                     "vulnerabilities": [
                         {

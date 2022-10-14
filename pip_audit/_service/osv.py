@@ -5,13 +5,14 @@ Functionality for using the [OSV](https://osv.dev/) API as a `VulnerabilityServi
 import json
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, cast
 
 import requests
 from packaging.version import Version
 
 from pip_audit._cache import caching_session
 from pip_audit._service.interface import (
+    AuditResult,
     ConnectionError,
     Dependency,
     ResolvedDependency,
@@ -42,14 +43,14 @@ class OsvService(VulnerabilityService):
         self.session = caching_session(cache_dir, use_pip=False)
         self.timeout = timeout
 
-    def query(self, spec: Dependency) -> Tuple[Dependency, List[VulnerabilityResult]]:
+    def query(self, spec: Dependency) -> AuditResult:
         """
         Queries OSV for the given `Dependency` specification.
 
         See `VulnerabilityService.query`.
         """
         if spec.is_skipped():
-            return spec, []
+            return spec, False, []
         spec = cast(ResolvedDependency, spec)
 
         url = "https://api.osv.dev/v1/query"
@@ -76,7 +77,7 @@ class OsvService(VulnerabilityService):
         results: List[VulnerabilityResult] = []
         response_json = response.json()
         if not response_json:
-            return spec, results
+            return spec, False, results
 
         for vuln in response_json["vulns"]:
             # Sanity check: only the v1 schema is specified at the moment,
@@ -137,4 +138,4 @@ class OsvService(VulnerabilityService):
 
             results.append(VulnerabilityResult(id, description, fix_versions, aliases))
 
-        return spec, results
+        return spec, False, results

@@ -54,7 +54,7 @@ def vuln_service():
                     )
                 ]
 
-            return spec, []
+            return spec, False, []
 
     return Service
 

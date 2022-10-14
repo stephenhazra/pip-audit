@@ -4,10 +4,10 @@ Core auditing APIs.
 
 import logging
 from dataclasses import dataclass
-from typing import Iterator, List, Set, Tuple
+from typing import Iterator, List, Set
 
 from pip_audit._dependency_source import DependencySource
-from pip_audit._service import Dependency, VulnerabilityResult, VulnerabilityService
+from pip_audit._service import AuditResult, VulnerabilityResult, VulnerabilityService
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,7 @@ class Auditor:
         self._service = service
         self._options = options
 
-    def audit(
-        self, source: DependencySource
-    ) -> Iterator[Tuple[Dependency, List[VulnerabilityResult]]]:
+    def audit(self, source: DependencySource) -> Iterator[AuditResult]:
         """
         Perform the auditing step, collecting dependencies from `source`.
 
@@ -63,7 +61,7 @@ class Auditor:
             logger.info(f"Dry run: would have audited {len(list(specs))} packages")
             return {}
         else:
-            for dep, vulns in self._service.query_all(specs):
+            for dep, yanked, vulns in self._service.query_all(specs):
                 unique_vulns: List[VulnerabilityResult] = []
                 seen_aliases: Set[str] = set()
 
@@ -91,4 +89,4 @@ class Auditor:
                     seen_aliases.update(v.aliases | {v.id})
                     unique_vulns.append(v)
 
-                yield (dep, unique_vulns)
+                yield (dep, yanked, unique_vulns)
